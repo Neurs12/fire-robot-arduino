@@ -1,7 +1,7 @@
 # Fire robot implementation (Arduino Nano)
 This code was written based on the paper by SPK-STEM and HCMUTE, This is my class's assignment.
 
-A funny code for it: FIREINTHEHOLE
+A funny code name for it: FIREINTHEHOLE
 
 ## Behind the scene
 When you import the code to Arduino, the program will set `isRunning` to false, indicates that the program is not running.
