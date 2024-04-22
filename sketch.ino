@@ -14,6 +14,7 @@
 // Delay time for each cycle in main loop.
 const int LOOP_DELAY = 100;
 const int SPRAY_TIME = 5000;
+const int BACK_UP_TIME = 5000;
 
 // Enums to triggers different types of robot's functions
 enum TaskState {
