@@ -44,7 +44,7 @@ void setupOutputs() {
   
   // Left wheel functionalities.
   pinMode(LEFT_WHEEL_FORWARD, OUTPUT);
-  pinMode(LEFT_WHEEL_FORWARD, OUTPUT);
+  pinMode(LEFT_WHEEL_BACKWARD, OUTPUT);
 
   // Nozzle functionalities.
   pinMode(NOZZLE_RAISE, OUTPUT);
@@ -78,11 +78,12 @@ void loop() {
 
 // Power button states.
 // Handle power button hold down event.
-byte lastState = 1;
+byte powerButtonLastState = 1;
 
 void powerButtonHandler() {
-  byte latestState = digitalRead(POWER_BUTTON);
-  if (latestState == 0 && latestState != lastState) {
+  byte currentState = digitalRead(POWER_BUTTON);
+
+  if (!currentState && currentState != powerButtonLastState) {
     isRunning = !isRunning;
   }
 
@@ -94,5 +95,5 @@ void powerButtonHandler() {
     delay(1000);
   }
 
-  lastState = latestState;
+  powerButtonLastState = currentState;
 }
