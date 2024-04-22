@@ -1,7 +1,4 @@
-// Fire robot using Arduino. (Code FIREINTHEHOLE)
-// Based on specifications from SPK-STEM & HCMUTE's paper.
-
-// Might not be correct in some places due to limited resources.
+// Might not be correct due to limited resources.
 
 // Constant pin values for inputs.
 const int POWER_BUTTON = A0;
