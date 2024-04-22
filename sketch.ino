@@ -39,13 +39,31 @@ const byte SPRAY_WEAK = 12;
 const byte ARDUINO_LED = 13;
 
 // Variables to control the states of the robot.
+bool isObjectClose = false;
 int nozzleMovedTime = 0;
 int sprayedTime = 0;
 int backedUpTime = 0;
+
 byte powerButtonLastState = 1;
 bool powerLastState = false;
 TaskState currentTask = TaskState::FIND_OBJECT;
 bool isRunning = true;
+
+void reset() {
+  isObjectClose = false;
+  nozzleMovedTime = 0;
+  sprayedTime = 0;
+  backedUpTime = 0;
+
+  moveWheels(0, 0);
+
+  digitalWrite(SPRAY_STRONG, LOW);
+  digitalWrite(SPRAY_WEAK, LOW);
+
+  digitalWrite(NOZZLE_LOWER, HIGH);
+  delay(NOZZLE_MOVEMENT_TIME);
+  digitalWrite(NOZZLE_LOWER, LOW);
+}
 
 void moveWheels(short rightWheel, short leftWheel) {
   if (rightWheel != 0) {
@@ -94,14 +112,21 @@ void setupOutputs() {
   pinMode(ARDUINO_LED, OUTPUT);
 }
 
-bool findObject() {
+short findObject() {
   byte irRightRead = digitalRead(IR_RIGHT);
   byte irLeftRead = digitalRead(IR_LEFT);
   byte contactRead = digitalRead(FRONT_CONTACT);
 
-  if ((!irRightRead && !irLeftRead) || !contactRead) {
+  // 1: Object might far way.
+  if (!irRightRead && !irLeftRead) {
     moveWheels(0, 0);
-    return true;
+    return 1;
+  }
+
+  // 0: Object right in front the robot.
+  if (!contactRead) {
+    moveWheels(0, 0);
+    return 0;
   }
 
   if (irRightRead && irLeftRead) {
@@ -114,7 +139,7 @@ bool findObject() {
     moveWheels(0, 150);
   }
 
-  return false;
+  return -1;
 }
 
 bool sprayWater(bool strongMode) {
@@ -125,7 +150,7 @@ bool sprayWater(bool strongMode) {
     return true;
   }
 
-  if (nozzleMovedTime < SPRAY_TIME) {
+  if (nozzleMovedTime < NOZZLE_MOVEMENT_TIME) {
     digitalWrite(NOZZLE_RAISE, HIGH);
     nozzleMovedTime += LOOP_DELAY;
 
@@ -135,6 +160,14 @@ bool sprayWater(bool strongMode) {
 
   digitalWrite(strongMode ? SPRAY_STRONG : SPRAY_WEAK, HIGH);
   sprayedTime += LOOP_DELAY;
+
+  // The object somehow moved, go back to find object action.
+  if (findObject() == -1) {
+    sprayedTime = 0;
+    digitalWrite(strongMode ? SPRAY_STRONG : SPRAY_WEAK, LOW);
+    digitalWrite(NOZZLE_RAISE, LOW);
+    currentTask = TaskState::FIND_OBJECT;
+  }
 
   return false;
 }
@@ -179,21 +212,6 @@ void powerButtonHandler() {
   powerLastState = isRunning;
 }
 
-void reset() {
-  nozzleMovedTime = 0;
-  sprayedTime = 0;
-  backedUpTime = 0;
-
-  moveWheels(0, 0);
-
-  digitalWrite(SPRAY_STRONG, LOW);
-  digitalWrite(SPRAY_WEAK, LOW);
-
-  digitalWrite(NOZZLE_LOWER, HIGH);
-  delay(NOZZLE_MOVEMENT_TIME);
-  digitalWrite(NOZZLE_LOWER, LOW);
-}
-
 void setup() {
   // Sync with standard baud rate.
   Serial.begin(9600);
@@ -209,28 +227,21 @@ void loop() {
 
   if (isRunning) {
     if (currentTask == TaskState::FIND_OBJECT) {
-      bool result = findObject();
+      short result = findObject();
 
       // Object found, move to spray water action.
-      if (result) {
+      if (result > -1) {
+        isObjectClose = result == 1;
         currentTask = TaskState::SPRAY_WATER;
       }
     }
 
     if (currentTask == TaskState::SPRAY_WATER) {
-      bool result = sprayWater(true);
+      bool result = sprayWater(isObjectClose);
 
       // Spray finished, move to back up action.
       if (result) {
         currentTask = TaskState::BACK_UP;
-      }
-
-      // The object somehow moved, go back to find object action.
-      if (!findObject()) {
-        sprayedTime = 0;
-        digitalWrite(true ? SPRAY_STRONG : SPRAY_WEAK, LOW);
-        digitalWrite(NOZZLE_RAISE, LOW);
-        currentTask = TaskState::FIND_OBJECT;
       }
     }
 
