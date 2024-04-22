@@ -70,6 +70,7 @@ bool isRunning = true;
 void loop() {
   powerButtonHandler();
 
+  // Debug purpose
   Serial.println("A");
   // Main loop.
   delay(100);
@@ -89,6 +90,7 @@ void powerButtonHandler() {
     digitalWrite(ARDUINO_LED, HIGH);
   } else {
     digitalWrite(ARDUINO_LED, LOW);
+    // Might leave it here to reduce load for the board.
     delay(1000);
   }
 
