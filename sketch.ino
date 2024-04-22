@@ -8,7 +8,6 @@ const byte IR_LEFT = A2;
 
 const byte FRONT_CONTACT = A3;
 
-
 // Constant pin values for outputs.
 const byte RIGHT_WHEEL_FORWARD = 9;
 const byte RIGHT_WHEEL_BACKWARD = 10;
@@ -26,6 +25,8 @@ const byte ARDUINO_LED = 13;
 
 
 // Program's states.
+bool isRunning = true;
+
 
 void setupInputs() {
   // Start/stop button.
@@ -72,10 +73,20 @@ void setup() {
 }
 
 void loop() {
+  powerButtonHandler();
+
+  // Main loop.
+  delay(1000);
+}
+
+void powerButtonHandler() {
   if (digitalRead(POWER_BUTTON) == 0) {
-    delay(1000);
-    return;
+    isRunning = !isRunning;
   }
 
-  Serial.println("A");
+  if (isRunning) {
+    digitalWrite(ARDUINO_LED, HIGH);
+  } else {
+    digitalWrite(ARDUINO_LED, LOW);
+  }
 }
