@@ -17,6 +17,7 @@ enum TaskState {
 // Time related variables / Delay time for each cycle in main loop.
 const int LOOP_DELAY = 100;
 // Must be divisible by LOOP_DELAY. (x % LOOP_DELAY == 0)
+const int NOZZLE_MOVEMENT_TIME = 1000;
 const int SPRAY_TIME = 2000;
 const int BACK_UP_TIME = 5000;
 
@@ -38,13 +39,13 @@ const byte SPRAY_WEAK = 12;
 const byte ARDUINO_LED = 13;
 
 // Variables to control the states of the robot.
+int nozzleMovedTime = 0;
 int sprayedTime = 0;
 int backedUpTime = 0;
 byte powerButtonLastState = 1;
 bool powerLastState = false;
 TaskState currentTask = TaskState::FIND_OBJECT;
 bool isRunning = true;
-
 
 void moveWheels(short rightWheel, short leftWheel) {
   if (rightWheel != 0) {
@@ -93,6 +94,106 @@ void setupOutputs() {
   pinMode(ARDUINO_LED, OUTPUT);
 }
 
+bool findObject() {
+  byte irRightRead = digitalRead(IR_RIGHT);
+  byte irLeftRead = digitalRead(IR_LEFT);
+  byte contactRead = digitalRead(FRONT_CONTACT);
+
+  if ((!irRightRead && !irLeftRead) || !contactRead) {
+    moveWheels(0, 0);
+    return true;
+  }
+
+  if (irRightRead && irLeftRead) {
+    moveWheels(150, 150);
+  }
+  if (irRightRead && !irLeftRead) {
+    moveWheels(150, 0);
+  }
+  if (!irRightRead && irLeftRead) {
+    moveWheels(0, 150);
+  }
+
+  return false;
+}
+
+bool sprayWater(bool strongMode) {
+  if (sprayedTime >= SPRAY_TIME) {
+    nozzleMovedTime = 0;
+    sprayedTime = 0;
+    digitalWrite(strongMode ? SPRAY_STRONG : SPRAY_WEAK, LOW);
+    return true;
+  }
+
+  if (nozzleMovedTime < SPRAY_TIME) {
+    digitalWrite(NOZZLE_RAISE, HIGH);
+    nozzleMovedTime += LOOP_DELAY;
+
+    return false;
+  }
+  digitalWrite(NOZZLE_RAISE, LOW);
+
+  digitalWrite(strongMode ? SPRAY_STRONG : SPRAY_WEAK, HIGH);
+  sprayedTime += LOOP_DELAY;
+
+  return false;
+}
+
+bool backUp() {
+  moveWheels(-150, -150);
+  backedUpTime += LOOP_DELAY;
+
+  if (backedUpTime >= BACK_UP_TIME) {
+    moveWheels(0, 0);
+    backedUpTime = 0;
+
+    return true;
+  }
+
+  return false;
+}
+
+void powerButtonHandler() {
+  byte currentState = digitalRead(POWER_BUTTON);
+
+  if (!currentState && currentState != powerButtonLastState) {
+    isRunning = !isRunning;
+  }
+
+  if (isRunning) {
+    if (powerLastState != isRunning) {
+      currentTask = TaskState::FIND_OBJECT;
+      digitalWrite(ARDUINO_LED, HIGH);
+    }
+  } else {
+    if (currentTask != TaskState::STOP) {
+      currentTask = TaskState::STOP;
+      digitalWrite(ARDUINO_LED, LOW);
+      reset();
+    }
+
+    delay(500);
+  }
+
+  powerButtonLastState = currentState;
+  powerLastState = isRunning;
+}
+
+void reset() {
+  nozzleMovedTime = 0;
+  sprayedTime = 0;
+  backedUpTime = 0;
+
+  moveWheels(0, 0);
+
+  digitalWrite(SPRAY_STRONG, LOW);
+  digitalWrite(SPRAY_WEAK, LOW);
+
+  digitalWrite(NOZZLE_LOWER, HIGH);
+  delay(NOZZLE_MOVEMENT_TIME);
+  digitalWrite(NOZZLE_LOWER, LOW);
+}
+
 void setup() {
   // Sync with standard baud rate.
   Serial.begin(9600);
@@ -128,6 +229,7 @@ void loop() {
       if (!findObject()) {
         sprayedTime = 0;
         digitalWrite(true ? SPRAY_STRONG : SPRAY_WEAK, LOW);
+        digitalWrite(NOZZLE_RAISE, LOW);
         currentTask = TaskState::FIND_OBJECT;
       }
     }
@@ -135,7 +237,7 @@ void loop() {
     if (currentTask == TaskState::BACK_UP) {
       bool result = backUp();
 
-      // Program finished
+      // All actions finished, stop the robot, waiting for next restart.
       if (result) {
         currentTask = TaskState::STOP;
       }
@@ -145,86 +247,4 @@ void loop() {
 
   // Main loop.
   delay(LOOP_DELAY);
-}
-
-bool findObject() {
-  byte irRightRead = digitalRead(IR_RIGHT);
-  byte irLeftRead = digitalRead(IR_LEFT);
-  byte contactRead = digitalRead(FRONT_CONTACT);
-
-  if ((!irRightRead && !irLeftRead) || !contactRead) {
-    moveWheels(0, 0);
-    return true;
-  }
-
-  if (irRightRead && irLeftRead) {
-    moveWheels(150, 150);
-  }
-  if (irRightRead && !irLeftRead) {
-    moveWheels(150, 0);
-  }
-  if (!irRightRead && irLeftRead) {
-    moveWheels(0, 150);
-  }
-
-  return false;
-}
-
-bool sprayWater(bool strongMode) {
-  digitalWrite(strongMode ? SPRAY_STRONG : SPRAY_WEAK, HIGH);
-  sprayedTime += LOOP_DELAY;
-
-  if (sprayedTime >= SPRAY_TIME) {
-    sprayedTime = 0;
-    digitalWrite(strongMode ? SPRAY_STRONG : SPRAY_WEAK, LOW);
-    return true;
-  }
-
-  return false;
-}
-
-bool backUp() {
-  moveWheels(-150, -150);
-  backedUpTime += LOOP_DELAY;
-
-  if (backedUpTime >= SPRAY_TIME) {
-    moveWheels(0, 0);
-    backedUpTime = 0;
-
-    return true;
-  }
-
-  return false;
-}
-
-void powerButtonHandler() {
-  byte currentState = digitalRead(POWER_BUTTON);
-
-  if (!currentState && currentState != powerButtonLastState) {
-    isRunning = !isRunning;
-  }
-
-  if (isRunning) {
-    if (powerLastState != isRunning) {
-      currentTask = TaskState::FIND_OBJECT;
-      digitalWrite(ARDUINO_LED, HIGH);
-    }
-  } else {
-    if (currentTask != TaskState::STOP) {
-      reset();
-      currentTask = TaskState::STOP;
-      digitalWrite(ARDUINO_LED, LOW);
-    }
-
-    delay(500);
-  }
-
-  powerButtonLastState = currentState;
-  powerLastState = isRunning;
-}
-
-void reset() {
-  moveWheels(0, 0);
-  digitalWrite(SPRAY_STRONG, LOW);
-  digitalWrite(SPRAY_WEAK, LOW);
 }
