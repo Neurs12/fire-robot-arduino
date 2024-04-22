@@ -50,8 +50,6 @@ void moveWheels(short leftWheel, short rightWheel) {
   }
 }
 
-void 
-
 void setupInputs() {
   // Start/stop button.
   pinMode(POWER_BUTTON, INPUT_PULLUP);
