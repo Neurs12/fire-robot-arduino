@@ -35,14 +35,22 @@ const byte SPRAY_WEAK = 12;
 
 const byte ARDUINO_LED = 13;
 
-void moveWheels(byte leftWheel, byte rightWheel, bool controllingLeftForward = true, bool controllingRightForward = true) {
-  if (leftWheel >= 0) {
-    analogWrite(controllingLeftForward ? LEFT_WHEEL_FORWARD : LEFT_WHEEL_BACKWARD, leftWheel);
+void moveWheels(short leftWheel, short rightWheel) {
+  if (leftWheel != 0) {
+    analogWrite(leftWheel > 0 ? LEFT_WHEEL_FORWARD : LEFT_WHEEL_BACKWARD, abs(leftWheel));
+  } else {
+    analogWrite(LEFT_WHEEL_FORWARD, 0);
+    analogWrite(LEFT_WHEEL_BACKWARD, 0);
   }
-  if (rightWheel >= 0) {
-    analogWrite(controllingRightForward ? RIGHT_WHEEL_FORWARD : RIGHT_WHEEL_BACKWARD, rightWheel);
+  if (rightWheel != 0) {
+    analogWrite(rightWheel > 0 ? RIGHT_WHEEL_FORWARD : RIGHT_WHEEL_BACKWARD, abs(rightWheel));
+  } else {
+    analogWrite(RIGHT_WHEEL_FORWARD, 0);
+    analogWrite(RIGHT_WHEEL_BACKWARD, 0);
   }
 }
+
+void 
 
 void setupInputs() {
   // Start/stop button.
