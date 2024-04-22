@@ -23,11 +23,6 @@ const byte SPRAY_WEAK = 12;
 
 const byte ARDUINO_LED = 13;
 
-
-// Program's states.
-bool isRunning = true;
-
-
 void setupInputs() {
   // Start/stop button.
   pinMode(POWER_BUTTON, INPUT_PULLUP);
@@ -53,14 +48,11 @@ void setupOutputs() {
 
   // Nozzle functionalities.
   pinMode(NOZZLE_RAISE, OUTPUT);
-  // Lower the nozzle.
   pinMode(NOZZLE_LOWER, OUTPUT);
-  // Strong spray.
   pinMode(SPRAY_STRONG, OUTPUT);
-  //Weak spray.
   pinMode(SPRAY_WEAK, OUTPUT);
 
-  // LED Indicator (custom) / Might be needed to indicates the power state.
+  // LED Indicator (custom) / Indicates the power state.
   pinMode(ARDUINO_LED, OUTPUT);
 }
 
@@ -72,15 +64,24 @@ void setup() {
   setupOutputs();
 }
 
+// Program's states.
+bool isRunning = true;
+
 void loop() {
   powerButtonHandler();
 
+  Serial.println("A");
   // Main loop.
-  delay(1000);
+  delay(100);
 }
 
+// Power button states.
+// Handle power button hold down event.
+byte lastState = 1;
+
 void powerButtonHandler() {
-  if (digitalRead(POWER_BUTTON) == 0) {
+  byte latestState = digitalRead(POWER_BUTTON);
+  if (latestState == 0 && latestState != lastState) {
     isRunning = !isRunning;
   }
 
@@ -88,5 +89,8 @@ void powerButtonHandler() {
     digitalWrite(ARDUINO_LED, HIGH);
   } else {
     digitalWrite(ARDUINO_LED, LOW);
+    delay(1000);
   }
+
+  lastState = latestState;
 }
