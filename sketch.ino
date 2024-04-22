@@ -107,4 +107,4 @@ void powerButtonHandler() {
 
 enum FunctionState {
   FIND_OBJECT, SPRAY_WATER, BACK_UP, STOP
-}
+};
