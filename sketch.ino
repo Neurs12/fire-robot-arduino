@@ -47,7 +47,7 @@ int backedUpTime = 0;
 byte powerButtonLastState = 1;
 bool powerLastState = false;
 TaskState currentTask = TaskState::FIND_OBJECT;
-bool isRunning = true;
+bool isRunning = false;
 
 void reset() {
   isObjectClose = false;
