@@ -9,40 +9,42 @@
 
 // Might not be correct due to limited resources.
 
-
-// Time related variables
-// Delay time for each cycle in main loop.
-const int LOOP_DELAY = 100;
-const int SPRAY_TIME = 5000;
-const int BACK_UP_TIME = 5000;
-
 // Enums to triggers different types of robot's functions
 enum TaskState {
   FIND_OBJECT, SPRAY_WATER, BACK_UP, STOP
 };
 
+// Time related variables / Delay time for each cycle in main loop.
+const int LOOP_DELAY = 100;
+// Must be divisible by LOOP_DELAY. (x % LOOP_DELAY == 0)
+const int SPRAY_TIME = 2000;
+const int BACK_UP_TIME = 5000;
+
 // Constant pin values for inputs.
 const byte POWER_BUTTON = A0;
-
 const byte IR_RIGHT = A1;
 const byte IR_LEFT = A2;
-
 const byte FRONT_CONTACT = A3;
 
 // Constant pin values for outputs.
 const byte RIGHT_WHEEL_FORWARD = 9;
 const byte RIGHT_WHEEL_BACKWARD = 10;
-
 const byte LEFT_WHEEL_FORWARD = 5;
 const byte LEFT_WHEEL_BACKWARD = 6;
-
 const byte NOZZLE_RAISE = 7;
 const byte NOZZLE_LOWER = 8;
-
 const byte SPRAY_STRONG = 11;
 const byte SPRAY_WEAK = 12;
-
 const byte ARDUINO_LED = 13;
+
+// Variables to control the states of the robot.
+int sprayedTime = 0;
+int backedUpTime = 0;
+byte powerButtonLastState = 1;
+bool powerLastState = false;
+TaskState currentTask = TaskState::FIND_OBJECT;
+bool isRunning = true;
+
 
 void moveWheels(short rightWheel, short leftWheel) {
   if (rightWheel != 0) {
@@ -92,6 +94,7 @@ void setupOutputs() {
 }
 
 void setup() {
+  // Sync with standard baud rate.
   Serial.begin(9600);
 
   // Define input ports.
@@ -100,10 +103,6 @@ void setup() {
   setupOutputs();
 }
 
-// Program's states.
-bool isRunning = true;
-TaskState currentTask = TaskState::FIND_OBJECT;
-
 void loop() {
   powerButtonHandler();
 
@@ -111,11 +110,37 @@ void loop() {
     if (currentTask == TaskState::FIND_OBJECT) {
       bool result = findObject();
 
-      // Object found, move to spray water mode.
+      // Object found, move to spray water action.
       if (result) {
         currentTask = TaskState::SPRAY_WATER;
       }
     }
+
+    if (currentTask == TaskState::SPRAY_WATER) {
+      bool result = sprayWater(true);
+
+      // Spray finished, move to back up action.
+      if (result) {
+        currentTask = TaskState::BACK_UP;
+      }
+
+      // The object somehow moved, go back to find object action.
+      if (!findObject()) {
+        sprayedTime = 0;
+        digitalWrite(true ? SPRAY_STRONG : SPRAY_WEAK, LOW);
+        currentTask = TaskState::FIND_OBJECT;
+      }
+    }
+
+    if (currentTask == TaskState::BACK_UP) {
+      bool result = backUp();
+
+      // Program finished
+      if (result) {
+        currentTask = TaskState::STOP;
+      }
+    }
+
   }
 
   // Main loop.
@@ -127,6 +152,11 @@ bool findObject() {
   byte irLeftRead = digitalRead(IR_LEFT);
   byte contactRead = digitalRead(FRONT_CONTACT);
 
+  if ((!irRightRead && !irLeftRead) || !contactRead) {
+    moveWheels(0, 0);
+    return true;
+  }
+
   if (irRightRead && irLeftRead) {
     moveWheels(150, 150);
   }
@@ -137,18 +167,35 @@ bool findObject() {
     moveWheels(0, 150);
   }
 
-  // Object found, return true for further instructions from mainloop.
-  if ((!irRightRead && !irLeftRead) || !contactRead) {
-    moveWheels(0, 0);
+  return false;
+}
+
+bool sprayWater(bool strongMode) {
+  digitalWrite(strongMode ? SPRAY_STRONG : SPRAY_WEAK, HIGH);
+  sprayedTime += LOOP_DELAY;
+
+  if (sprayedTime >= SPRAY_TIME) {
+    sprayedTime = 0;
+    digitalWrite(strongMode ? SPRAY_STRONG : SPRAY_WEAK, LOW);
     return true;
   }
 
   return false;
 }
 
-// Power button states.
-// Handle power button hold down event.
-byte powerButtonLastState = 1;
+bool backUp() {
+  moveWheels(-150, -150);
+  backedUpTime += LOOP_DELAY;
+
+  if (backedUpTime >= SPRAY_TIME) {
+    moveWheels(0, 0);
+    backedUpTime = 0;
+
+    return true;
+  }
+
+  return false;
+}
 
 void powerButtonHandler() {
   byte currentState = digitalRead(POWER_BUTTON);
@@ -158,12 +205,26 @@ void powerButtonHandler() {
   }
 
   if (isRunning) {
-    digitalWrite(ARDUINO_LED, HIGH);
+    if (powerLastState != isRunning) {
+      currentTask = TaskState::FIND_OBJECT;
+      digitalWrite(ARDUINO_LED, HIGH);
+    }
   } else {
-    digitalWrite(ARDUINO_LED, LOW);
-    // Might leave it here to reduce load for the board.
-    delay(1000);
+    if (currentTask != TaskState::STOP) {
+      reset();
+      currentTask = TaskState::STOP;
+      digitalWrite(ARDUINO_LED, LOW);
+    }
+
+    delay(500);
   }
 
   powerButtonLastState = currentState;
+  powerLastState = isRunning;
+}
+
+void reset() {
+  moveWheels(0, 0);
+  digitalWrite(SPRAY_STRONG, LOW);
+  digitalWrite(SPRAY_WEAK, LOW);
 }
