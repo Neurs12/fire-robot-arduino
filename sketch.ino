@@ -1,27 +1,31 @@
 // Might not be correct due to limited resources.
 
 // Constant pin values for inputs.
-const int POWER_BUTTON = A0;
+const byte POWER_BUTTON = A0;
 
-const int IR_RIGHT = A1;
-const int IR_LEFT = A2;
+const byte IR_RIGHT = A1;
+const byte IR_LEFT = A2;
 
-const int FRONT_CONTACT = A3;
+const byte FRONT_CONTACT = A3;
+
 
 // Constant pin values for outputs.
-const int RIGHT_WHEEL_FORWARD = 9;
-const int RIGHT_WHEEL_BACKWARD = 10;
+const byte RIGHT_WHEEL_FORWARD = 9;
+const byte RIGHT_WHEEL_BACKWARD = 10;
 
-const int LEFT_WHEEL_FORWARD = 5;
-const int LEFT_WHEEL_BACKWARD = 6;
+const byte LEFT_WHEEL_FORWARD = 5;
+const byte LEFT_WHEEL_BACKWARD = 6;
 
-const int NOZZLE_RAISE = 7;
-const int NOZZLE_LOWER = 8;
+const byte NOZZLE_RAISE = 7;
+const byte NOZZLE_LOWER = 8;
 
-const int SPRAY_STRONG = 11;
-const int SPRAY_WEAK = 12;
+const byte SPRAY_STRONG = 11;
+const byte SPRAY_WEAK = 12;
 
-const int ARDUINO_LED = 13;
+const byte ARDUINO_LED = 13;
+
+
+// Program's states.
 
 void setupInputs() {
   // Start/stop button.
@@ -72,4 +76,6 @@ void loop() {
     delay(1000);
     return;
   }
+
+  Serial.println("A");
 }
