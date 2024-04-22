@@ -35,6 +35,15 @@ const byte SPRAY_WEAK = 12;
 
 const byte ARDUINO_LED = 13;
 
+void moveWheels(byte leftWheel, byte rightWheel, bool controllingLeftForward = true, bool controllingRightForward = true) {
+  if (leftWheel >= 0) {
+    analogWrite(controllingLeftForward ? LEFT_WHEEL_FORWARD : LEFT_WHEEL_BACKWARD, leftWheel);
+  }
+  if (rightWheel >= 0) {
+    analogWrite(controllingRightForward ? RIGHT_WHEEL_FORWARD : RIGHT_WHEEL_BACKWARD, rightWheel);
+  }
+}
+
 void setupInputs() {
   // Start/stop button.
   pinMode(POWER_BUTTON, INPUT_PULLUP);
