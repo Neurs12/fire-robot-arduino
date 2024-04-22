@@ -91,6 +91,8 @@ void setupOutputs() {
 }
 
 void setup() {
+  Serial.begin(9600);
+
   // Define input ports.
   setupInputs();
   // Define output ports.
@@ -113,22 +115,13 @@ void loop() {
         currentTask = TaskState::SPRAY_WATER;
       }
     }
-
-    if (currentTask == TaskState::SPRAY_WATER) {
-      bool result = 
-
-      // Task finished, retreat from the object.
-      if (result) {
-        currentTask = TaskState::SPRAY_WATER;
-      }
-    }
   }
 
   // Main loop.
   delay(LOOP_DELAY);
 }
 
-void findObject() {
+bool findObject() {
   byte irRightRead = digitalRead(IR_RIGHT);
   byte irLeftRead = digitalRead(IR_LEFT);
   byte contactRead = digitalRead(FRONT_CONTACT);
