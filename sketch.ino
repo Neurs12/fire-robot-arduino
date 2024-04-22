@@ -7,6 +7,11 @@
 
 // Might not be correct due to limited resources.
 
+// Enums to triggers different types of robot's functions
+enum FunctionState {
+  FIND_OBJECT, SPRAY_WATER, BACK_UP, STOP
+};
+
 // Constant pin values for inputs.
 const byte POWER_BUTTON = A0;
 
@@ -104,7 +109,3 @@ void powerButtonHandler() {
 
   powerButtonLastState = currentState;
 }
-
-enum FunctionState {
-  FIND_OBJECT, SPRAY_WATER, BACK_UP, STOP
-};
