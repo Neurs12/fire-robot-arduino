@@ -1,3 +1,10 @@
+/**
+   Fire Robot Arduino
+
+   Copyright (C) 2024, Neurs.
+   Released under the MIT License.
+*/
+
 // Might not be correct due to limited resources.
 
 // Constant pin values for inputs.
@@ -96,4 +103,8 @@ void powerButtonHandler() {
   }
 
   powerButtonLastState = currentState;
+}
+
+enum FunctionState {
+  FIND_OBJECT, SPRAY_WATER, BACK_UP, STOP
 }
