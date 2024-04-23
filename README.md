@@ -3,6 +3,19 @@ This code was written based on the paper by SPK-STEM and HCMUTE, This is my clas
 
 A funny code name for it: FIREINTHEHOLE
 
+## Instructions for the robot, step by step:
+- When active, the program won't run, you must turn it on using the power button.
+- When turned on, the power button handler will receive the input and compare runs, then set the task to find an object.
+- While finding an object, the robot will check for some scenarios:
+    - If the left or right IR sensor detects something, turn away from it until nothing is blocked again.
+    - If both of the sensors got blocked, switch to spray water action, but turn on strong mode.
+    - If the contact sensor gets blocked, switch to spray water action, but turn off strong mode, the water spray will be weaker.
+- Srapying contains two steps: Raise the nozzle and spray.
+    - First, raise the nozzle.
+    - Then spray, but while spraying.
+    - While running this action, it will also call the find object function again to check if the object is still there. If the object is no longer there, stop the spray and switch the action back to find the object.
+- After spraying is done, it'll switch to the backup action, use the wheel to go back for some time, then stop the robot, waiting for the next restart.
+
 ## Behind the scene
 When you import the code to Arduino, the program will set `isRunning` to false, indicates that the program is not running.
 
