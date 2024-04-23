@@ -344,7 +344,7 @@ void loop() {
 }
 ```
 
-- Everytime loop, check for power button for new state.
+- Every loop, check for power button for new state.
 - Then check `isRunning`.
 - If true, run the current task.
 - In every tasks, there's a result variable assigned with the according function provided to the given task.
