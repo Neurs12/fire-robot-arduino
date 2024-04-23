@@ -10,7 +10,7 @@ A funny code name for it: FIREINTHEHOLE
     - If the left or right IR sensor detects something, turn away from it until nothing is blocked again.
     - If both of the sensors got blocked, switch to spray water action, but turn on strong mode.
     - If the contact sensor gets blocked, switch to spray water action, but turn off strong mode, the water spray will be weaker.
-- Srapying contains two steps: Raise the nozzle and spray.
+- Spraying contains two steps: Raise the nozzle and spray.
     - First, raise the nozzle.
     - Then spray, but while spraying.
     - While running this action, it will also call the find object function again to check if the object is still there. If the object is no longer there, stop the spray and switch the action back to find the object.
