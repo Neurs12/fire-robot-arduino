@@ -4,10 +4,8 @@
   Copyright (C) 2024, Neurs.
   Released under the MIT License.
 
-  https://github.com/Neurs12/fire-robot-arduino
+  https://github.com/neursh/fire-robot-arduino
 */
-
-// Might not be correct due to limited resources.
 
 // Enums to triggers different types of robot's functions
 enum TaskState {
@@ -15,11 +13,11 @@ enum TaskState {
 };
 
 // Time related variables / Delay time for each cycle in main loop.
-const int LOOP_DELAY = 100;
+const int LOOP_DELAY = 5;
 // Must be divisible by LOOP_DELAY. (x % LOOP_DELAY == 0)
-const int NOZZLE_MOVEMENT_TIME = 1000;
-const int SPRAY_TIME = 2000;
-const int BACK_UP_TIME = 5000;
+const int NOZZLE_MOVEMENT_TIME = 250;
+const int SPRAY_TIME = 500;
+const int BACK_UP_TIME = 1000;
 
 // Constant pin values for inputs.
 const byte POWER_BUTTON = A0;
@@ -204,7 +202,6 @@ void powerButtonHandler() {
       digitalWrite(ARDUINO_LED, LOW);
       reset();
     }
-
     delay(500);
   }
 
@@ -251,6 +248,8 @@ void loop() {
       // All actions finished, stop the robot, waiting for next restart.
       if (result) {
         currentTask = TaskState::STOP;
+        digitalWrite(ARDUINO_LED, LOW);
+        reset();
       }
     }
 
